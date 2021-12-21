@@ -275,16 +275,32 @@ def get_user_info(samname, ldap_session, domain_dumper):
         return False
 
 
-
 def get_dc_host(ldap_session, domain_dumper):
     dc_host = None
-    ldap_session.search(domain_dumper.root, '(&(objectCategory=Computer)(userAccountControl:1.2.840.113556.1.4.803:=8192))', 
-            attributes=['name','dNSHostName'])
+    ldap_session.search(
+        domain_dumper.root,
+        '(&(objectCategory=Computer)(userAccountControl:1.2.840.113556.1.4.803:=8192))',
+        attributes=['name', 'dNSHostName']
+    )
     dd = ldap_session.entries[0]
     js = dd.entry_to_json()
     return json.loads(js)['attributes']
 
 
+def get_dc_hosts(ldap_session, domain_dumper):
+    dc_host = None
+    ldap_session.search(
+        domain_dumper.root,
+        '(&(objectCategory=Computer)(userAccountControl:1.2.840.113556.1.4.803:=8192))',
+        attributes=['name', 'dNSHostName']
+    )
+    dc_hosts = []
+    for dd in ldap_session.entries:
+        js = dd.entry_to_json()
+        attributes = json.loads(js)['attributes']
+        if len(attributes['name']) > 0:
+            dc_hosts.append(attributes)
+    return dc_hosts
 
 def get_domain_admins(ldap_session, domain_dumper):
     admins = []
