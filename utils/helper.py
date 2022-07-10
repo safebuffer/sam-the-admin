@@ -304,11 +304,14 @@ def get_dc_hosts(ldap_session, domain_dumper):
 
 def get_domain_admins(ldap_session, domain_dumper):
     admins = []
-    ldap_session.search(domain_dumper.root, '(sAMAccountName=%s)' % escape_filter_chars("Domain Admins"), 
-            attributes=['objectSid'])
-    a = ldap_session.entries[0]
-    js = a.entry_to_json()
-    dn = json.loads(js)['dn']
+    dn = None
+    ldap_session.search(domain_dumper.root, '(objectClass=group)',
+                        attributes=['objectSid'])
+    for entrie in ldap_session.entries:
+        js = json.loads(entrie.entry_to_json())
+        if js["attributes"]["objectSid"][0].endswith('-512'):
+            dn = js['dn']
+
     search_filter = f"(&(objectClass=person)(sAMAccountName=*)(memberOf:1.2.840.113556.1.4.1941:={dn}))"
 
     ldap_session.search(domain_dumper.root, search_filter, attributes=["sAMAccountName"])
